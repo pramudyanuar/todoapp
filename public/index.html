@@ -4,54 +4,415 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <title>WebSocket Chat</title>
+  <title>Tasks</title>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="messages-container" id="messages"></div>
-    <div class="message-input-container">
-      <input type="text" id="messageInput" placeholder="Type a message...">
-      <button id="sendButton">Send</button>
+  <!-- Todo App Screen -->
+  <div id="todoScreen" class="todo-screen">
+    <div class="todo-container">
+      <div class="todo-header">
+        <h1 id="titleHeader">My Tasks</h1>
+        <p class="subtitle">Stay organized</p>
+      </div>
+
+      <div class="todo-input-container">
+        <input type="text" id="todoInput" placeholder="Add a new task..." class="todo-input">
+        <button id="addBtn" class="add-btn">+</button>
+      </div>
+
+      <div class="todos-list" id="todosList"></div>
+
+      <div class="empty-state" id="emptyState">
+        <p>No tasks yet. Add one to get started! 🚀</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secret Code Modal -->
+  <div id="secretModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeModalBtn">&times;</button>
+      <h2>Access Code</h2>
+      <p>Enter access code</p>
+      
+      <input type="password" id="secretCode" class="secret-input" placeholder="••••" maxlength="4">
+      <button id="submitCodeBtn" class="submit-btn">Enter</button>
+      
+      <div id="codeError" class="error-message"></div>
+    </div>
+  </div>
+
+  <!-- Chat Screen -->
+  <div id="chatScreen" class="chat-screen" style="display: none;">
+    <div class="chat-container">
+      <div class="chat-header">
+        <h1>Chat</h1>
+        <div class="user-status">
+          <span id="otherUserStatus" class="status offline">Teman: Offline</span>
+          <span id="yourUsername" class="your-user">Anda: -</span>
+          <button id="logoutBtn" class="logout-btn">Back</button>
+        </div>
+      </div>
+      <div class="messages-container" id="messages"></div>
+      <div class="message-input-container">
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button id="sendButton">Send</button>
+      </div>
     </div>
   </div>
 
   <script>
+    // ==============================================
+    // TODO APP LOGIC
+    // ==============================================
+    const todoInput = document.getElementById('todoInput');
+    const addBtn = document.getElementById('addBtn');
+    const todosList = document.getElementById('todosList');
+    const emptyState = document.getElementById('emptyState');
+    const titleHeader = document.getElementById('titleHeader');
+    
+    let todos = [];
+    let clickCount = 0;
+    let clickTimer = null;
+
+    // Load todos from localStorage
+    function loadTodos() {
+      const saved = localStorage.getItem('todos');
+      if (saved) {
+        todos = JSON.parse(saved);
+        renderTodos();
+      }
+    }
+
+    // Save todos to localStorage
+    function saveTodos() {
+      localStorage.setItem('todos', JSON.stringify(todos));
+    }
+
+    // Render todos
+    function renderTodos() {
+      todosList.innerHTML = '';
+      if (todos.length === 0) {
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+      }
+
+      todos.forEach((todo, index) => {
+        const todoItem = document.createElement('div');
+        todoItem.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+        todoItem.innerHTML = `
+          <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
+          <span class="todo-text">${escapeHtml(todo.text)}</span>
+          <button class="delete-btn">Delete</button>
+        `;
+
+        todoItem.querySelector('.todo-checkbox').addEventListener('change', () => {
+          todos[index].completed = !todos[index].completed;
+          saveTodos();
+          renderTodos();
+        });
+
+        todoItem.querySelector('.delete-btn').addEventListener('click', () => {
+          todos.splice(index, 1);
+          saveTodos();
+          renderTodos();
+        });
+
+        todosList.appendChild(todoItem);
+      });
+    }
+
+    function addTodo() {
+      const text = todoInput.value.trim();
+      if (text === '') return;
+
+      todos.push({ text, completed: false });
+      saveTodos();
+      renderTodos();
+      todoInput.value = '';
+      todoInput.focus();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Event listeners untuk todo
+    addBtn.addEventListener('click', addTodo);
+    todoInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addTodo();
+      }
+    });
+
+    // Double click title untuk buka secret code modal
+    titleHeader.addEventListener('click', () => {
+      clickCount++;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        clickCount = 0;
+      }, 500);
+
+      if (clickCount === 2) {
+        showSecretModal();
+        clickCount = 0;
+      }
+    });
+
+    // ==============================================
+    // SECRET CODE MODAL
+    // ==============================================
+    const secretModal = document.getElementById('secretModal');
+    const secretCodeInput = document.getElementById('secretCode');
+    const submitCodeBtn = document.getElementById('submitCodeBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const codeError = document.getElementById('codeError');
+
+    function showSecretModal() {
+      secretModal.style.display = 'flex';
+      secretCodeInput.value = '';
+      codeError.textContent = '';
+      codeError.style.display = 'none';
+      secretCodeInput.focus();
+    }
+
+    function hideSecretModal() {
+      secretModal.style.display = 'none';
+    }
+
+    closeModalBtn.addEventListener('click', hideSecretModal);
+
+    secretModal.addEventListener('click', (e) => {
+      if (e.target === secretModal) {
+        hideSecretModal();
+      }
+    });
+
+    submitCodeBtn.addEventListener('click', handleCodeSubmit);
+    secretCodeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleCodeSubmit();
+      }
+    });
+
+    function handleCodeSubmit() {
+      const code = secretCodeInput.value.trim();
+      if (!code) {
+        showCodeError('Enter code');
+        return;
+      }
+
+      ws.send(JSON.stringify({
+        type: 'auth',
+        code: code
+      }));
+      hideSecretModal();
+    }
+
+    function showCodeError(message) {
+      codeError.textContent = message;
+      codeError.style.display = 'block';
+    }
+
+    // ==============================================
+    // CHAT LOGIC
+    // ==============================================
+    const todoScreen = document.getElementById('todoScreen');
+    const chatScreen = document.getElementById('chatScreen');
     const messagesDiv = document.getElementById('messages');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
-    const ws = new WebSocket('ws://localhost:3000');
-  
+    const otherUserStatus = document.getElementById('otherUserStatus');
+    const yourUsername = document.getElementById('yourUsername');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    let currentUsername = null;
+    let currentUserId = null;
+    let otherUsername = null;
+    let otherUserId = null;
+    let isAuthenticated = false;
+
+    // WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.addEventListener('open', () => {
+      console.log('Connected');
+    });
+
     ws.addEventListener('message', (event) => {
-      const message = event.data;
-      displayMessage(message);
+      try {
+        const data = JSON.parse(event.data);
+        handleMessage(data);
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
     });
-  
-    sendButton.addEventListener('click', () => {
-      const message = messageInput.value;
-      ws.send(message);
-      displayMessage(message, true);
-      messageInput.value = '';
+
+    ws.addEventListener('error', (error) => {
+      console.error('WebSocket error:', error);
     });
-  
-    function displayMessage(message, isSender = false) {
+
+    function handleMessage(data) {
+      switch (data.type) {
+        case 'welcome':
+          console.log(data.message);
+          break;
+
+        case 'auth-success':
+          isAuthenticated = true;
+          currentUsername = data.username;
+          currentUserId = data.userId;
+          yourUsername.textContent = `Anda: ${currentUsername}`;
+          
+          todoScreen.style.display = 'none';
+          chatScreen.style.display = 'flex';
+          messageInput.focus();
+
+          if (data.messageHistory && data.messageHistory.length > 0) {
+            displaySystemMessage(`📜 ${data.messageHistory.length} previous messages`);
+            data.messageHistory.forEach(msg => {
+              const isSender = msg.userId === currentUserId;
+              displayMessage(msg.username, msg.text, msg.timestamp, isSender);
+            });
+          }
+          break;
+
+        case 'auth-error':
+          showCodeError(data.message);
+          break;
+
+        case 'message':
+          const isSender = data.userId === currentUserId;
+          displayMessage(data.username, data.text, data.timestamp, isSender);
+          break;
+
+        case 'user-joined':
+          if (data.username !== currentUsername) {
+            otherUsername = data.username;
+            updateOtherUserStatus(true);
+          }
+          displaySystemMessage(`${data.username} online`);
+          break;
+
+        case 'user-left':
+          if (data.username !== currentUsername) {
+            updateOtherUserStatus(false);
+          }
+          displaySystemMessage(`${data.username} offline`);
+          break;
+
+        case 'error':
+          displaySystemMessage(`Error: ${data.message}`);
+          break;
+      }
+    }
+
+    function updateOtherUserStatus(isOnline) {
+      if (otherUsername) {
+        if (isOnline) {
+          otherUserStatus.textContent = `Teman: ${otherUsername}`;
+          otherUserStatus.classList.remove('offline');
+          otherUserStatus.classList.add('online');
+        } else {
+          otherUserStatus.textContent = `Teman: ${otherUsername} (Away)`;
+          otherUserStatus.classList.remove('online');
+          otherUserStatus.classList.add('offline');
+        }
+      }
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      isAuthenticated = false;
+      currentUsername = null;
+      currentUserId = null;
+      todoScreen.style.display = 'flex';
+      chatScreen.style.display = 'none';
+      messagesDiv.innerHTML = '';
+      ws.close();
+      location.reload();
+    });
+
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message && ws.readyState === WebSocket.OPEN && isAuthenticated) {
+        ws.send(JSON.stringify({
+          type: 'message',
+          text: message
+        }));
+        messageInput.value = '';
+        messageInput.focus();
+      }
+    }
+
+    function displayMessage(username, text, timestamp, isSender = false) {
       const messageContainer = document.createElement('div');
-      const messageElement = document.createElement('div');
-      messageElement.textContent = message;
-      
       messageContainer.classList.add('message-container');
+      
+      const timeElement = document.createElement('span');
+      timeElement.classList.add('message-time');
+      timeElement.textContent = new Date(timestamp).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message-bubble');
+      
+      const userLabel = document.createElement('span');
+      userLabel.classList.add('message-username');
+      userLabel.textContent = username;
+      
+      const textElement = document.createElement('span');
+      textElement.classList.add('message-text');
+      textElement.textContent = text;
+      
+      messageElement.appendChild(userLabel);
+      messageElement.appendChild(textElement);
       
       if (isSender) {
         messageContainer.classList.add('sender-message-container');
-        messageElement.classList.add('message-bubble', 'sender-message-bubble');
+        messageElement.classList.add('sender-message-bubble');
       } else {
-        messageElement.classList.add('message-bubble');
+        messageElement.classList.add('receiver-message-bubble');
       }
+      
+      messageContainer.appendChild(messageElement);
+      messageContainer.appendChild(timeElement);
+      messagesDiv.appendChild(messageContainer);
+      
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function displaySystemMessage(text) {
+      const messageContainer = document.createElement('div');
+      messageContainer.classList.add('system-message-container');
+      
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('system-message');
+      messageElement.textContent = text;
       
       messageContainer.appendChild(messageElement);
       messagesDiv.appendChild(messageContainer);
       
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+
+    // Load todos on page load
+    loadTodos();
   </script>
 </body>
 </html>
