@@ -42,8 +42,8 @@ loadMessages();
 
 // Secret codes untuk authentication
 const SECRET_CODES = {
-  '0907': { username: 'avokiddos', userId: 1 },
-  '0701': { username: 'ynr', userId: 2 }
+  '0907': { username: 'bot 1', userId: 1 },
+  '0701': { username: 'bot 2', userId: 2 }
 };
 
 wss.on('connection', (ws) => {

@@ -5,5 +5,19 @@
     "userId": 1,
     "text": "haloooooooooo",
     "timestamp": "2026-03-02T21:29:25.353Z"
+  },
+  {
+    "type": "message",
+    "username": "avokiddos",
+    "userId": 1,
+    "text": "usasadja",
+    "timestamp": "2026-03-03T21:16:26.768Z"
+  },
+  {
+    "type": "message",
+    "username": "bot 2",
+    "userId": 2,
+    "text": "tes",
+    "timestamp": "2026-03-03T21:18:27.244Z"
   }
 ]
