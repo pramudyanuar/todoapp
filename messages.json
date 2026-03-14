@@ -1,0 +1,37 @@
+[
+  {
+    "type": "message",
+    "username": "bot 1",
+    "userId": 1,
+    "text": "tes",
+    "timestamp": "2026-03-14T16:30:38.245Z"
+  },
+  {
+    "type": "message",
+    "username": "bot 1",
+    "userId": 1,
+    "text": "hei",
+    "timestamp": "2026-03-14T16:31:19.790Z"
+  },
+  {
+    "type": "message",
+    "username": "bot 2",
+    "userId": 2,
+    "text": "tes bang",
+    "timestamp": "2026-03-14T16:32:47.391Z"
+  },
+  {
+    "type": "message",
+    "username": "bot 1",
+    "userId": 1,
+    "text": "woe",
+    "timestamp": "2026-03-14T16:33:20.405Z"
+  },
+  {
+    "type": "message",
+    "username": "bot 1",
+    "userId": 1,
+    "text": "kamu kemana",
+    "timestamp": "2026-03-14T16:33:22.678Z"
+  }
+]

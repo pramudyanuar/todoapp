@@ -2,99 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://cdn.tailwindcss.com"></script>
   <title id="pageTitle">Google</title>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; }
-    /* Excel Styling */
-    .excel-grid td { border: 0.5px solid #d1d1d1; height: 25px; padding: 0 8px; }
-    /* GitHub Styling */
-    .gh-code { font-family: 'ui-monospace', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; cursor: cell; }
     
-    /* Scrollbar */
-    #messageContainer::-webkit-scrollbar { width: 4px; }
-    #messageContainer::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    /* EXCEL STYLING */
+    .excel-grid td { border: 0.5px solid #d1d1d1; height: 25px; padding: 0 8px; font-size: 11px; }
+    .header-col { background: #f3f3f3; text-align: center; color: #666; width: 40px; border: 0.5px solid #d1d1d1; }
+    
+    /* GITHUB STYLING */
+    .gh-code { font-family: 'ui-monospace', 'SFMono-Regular', monospace; }
 
-    /* Hide Desktop Views on Mobile */
+    /* STEALTH MODE: Efek samar agar tidak terlihat dari jauh */
+    .stealth-text {
+      color: #f0f0f0 !important; /* Sangat tipis, nyaris nyaru dengan putih */
+      transition: all 0.2s ease;
+      filter: blur(0.4px);
+    }
+
+    /* Muncul jelas saat kursor mouse di atas area chat */
+    #excelRows:hover .stealth-text, 
+    #githubContent:hover .stealth-text {
+      color: #4b5563 !important; /* Warna teks normal abu gelap */
+      filter: blur(0);
+    }
+
+    /* Hide Scrollbar tapi tetap bisa di-scroll */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Responsive Switcher */
     @media (max-width: 768px) {
       .desktop-only { display: none !important; }
       #mobileChatView { display: flex !important; }
+    }
+    @media (min-width: 769px) {
+      #mobileChatView { display: none !important; }
     }
   </style>
 </head>
 <body class="bg-white flex flex-col h-screen overflow-hidden">
 
-  <div id="loginOverlay" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+  <div id="loginOverlay" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[100]">
     <div class="flex flex-col items-center w-full max-w-[584px] px-4 -mt-32">
-      <div class="mb-8 scale-75 md:scale-100">
+      <div class="mb-8 scale-75 md:scale-100 select-none">
         <span class="text-7xl font-medium tracking-tight">
           <span class="text-[#4285F4]">G</span><span class="text-[#EA4335]">o</span><span class="text-[#FBBC05]">o</span><span class="text-[#4285F4]">g</span><span class="text-[#34A853]">l</span><span class="text-[#EA4335]">e</span>
         </span>
       </div>
-      <div class="w-full relative group">
+      <div class="w-full relative">
         <div class="flex items-center w-full h-[46px] border border-gray-200 rounded-full px-4 hover:shadow-md focus-within:shadow-md transition-shadow">
-          <input type="text" id="secretCode" class="flex-1 outline-none text-gray-800 text-base px-2" placeholder="Search Google or type a URL" autocomplete="off">
+          <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input type="text" id="secretCode" class="flex-1 outline-none text-gray-800 text-base" placeholder="Search Google or type a URL" autocomplete="off">
         </div>
       </div>
       <div class="mt-8 flex gap-3">
-        <button id="loginBtn" class="bg-[#f8f9fa] border border-[#f8f9fa] px-4 py-2 text-sm text-[#3c4043] rounded">Google Search</button>
+        <button id="loginBtn" class="bg-[#f8f9fa] border border-[#f8f9fa] hover:border-[#dadce0] px-4 py-2 text-sm text-[#3c4043] rounded">Google Search</button>
+        <button class="bg-[#f8f9fa] border border-[#f8f9fa] hover:border-[#dadce0] px-4 py-2 text-sm text-[#3c4043] rounded">I'm Feeling Lucky</button>
       </div>
-      <p id="errorMsg" class="text-red-500 text-xs mt-4 hidden italic"></p>
     </div>
   </div>
 
-  <div id="excelView" class="hidden desktop-only flex-col h-full">
-    <div class="bg-[#217346] text-white flex items-center h-8 px-3 shrink-0">
-      <span class="font-bold mr-4">Excel</span>
-      <span class="text-[11px] opacity-80">Inventory_Update.xlsx</span>
+  <div id="excelView" class="hidden desktop-only flex flex-col h-full z-10">
+    <div class="bg-[#217346] text-white flex items-center h-8 shrink-0 px-3 justify-between select-none">
+      <div class="flex items-center gap-4">
+        <span class="font-bold">Excel</span>
+        <span class="text-[11px] opacity-80">Financial_Audit_Log_2026.xlsx</span>
+      </div>
     </div>
-    <div class="bg-white border-b border-gray-300 flex items-center h-9 px-2 gap-2">
-      <div class="text-gray-400 italic px-2">fx</div>
-      <input type="text" id="excelFormula" class="flex-1 h-full text-sm outline-none" placeholder="Enter data...">
+    <div class="bg-white border-b border-gray-300 flex items-center h-9 shrink-0 px-2 gap-2">
+      <div class="text-gray-400 italic px-2 font-serif text-sm">fx</div>
+      <input type="text" id="excelFormula" class="flex-1 h-full text-[11px] outline-none" placeholder="Ready">
     </div>
-    <div class="flex-1 overflow-auto bg-[#f3f3f3]">
-      <table class="border-collapse w-full bg-white text-[11px]">
+    <div class="flex-1 overflow-auto bg-[#f3f3f3] no-scrollbar">
+      <table class="border-collapse w-full bg-white">
         <thead>
-          <tr class="bg-[#f3f3f3] text-gray-500">
+          <tr class="bg-[#f3f3f3] text-center text-gray-500 text-[10px]">
             <td class="border border-gray-300 w-10"></td>
             <td class="border border-gray-300 w-32">A (Timestamp)</td>
-            <td class="border border-gray-300 w-32">B (User)</td>
-            <td class="border border-gray-300">C (Remarks)</td>
+            <td class="border border-gray-300 w-32">B (Source)</td>
+            <td class="border border-gray-300 text-left px-2">C (System_Remarks)</td>
           </tr>
         </thead>
-        <tbody id="excelRows" class="excel-grid"></tbody>
+        <tbody id="excelRows" class="excel-grid">
+          </tbody>
       </table>
     </div>
-  </div>
-
-  <div id="githubView" class="hidden desktop-only flex-col h-full bg-[#0d1117] text-[#e6edf3]">
-    <div class="bg-[#161b22] p-4 border-b border-[#30363d] flex justify-between items-center">
-      <span class="font-semibold text-sm">main.py</span>
-    </div>
-    <div class="flex-1 overflow-auto p-4 gh-code text-sm leading-relaxed" id="githubContent"></div>
-    <div class="p-4 border-t border-[#30363d] flex gap-2">
-      <span class="text-[#7d8590]">>>></span>
-      <input type="text" id="githubInput" class="bg-transparent flex-1 outline-none text-white">
+    <div class="bg-[#f3f3f3] border-t border-gray-300 h-7 flex items-center px-4 shrink-0">
+      <div class="bg-white border-x border-t border-gray-300 px-4 h-full flex items-center text-green-800 font-bold text-[10px]">Audit_Data</div>
     </div>
   </div>
 
-  <div id="mobileChatView" class="hidden flex-col h-full bg-[#efeae2]">
+  <div id="githubView" class="hidden desktop-only flex flex-col h-full bg-[#0d1117] text-[#e6edf3] z-10">
+    <div class="bg-[#161b22] p-3 border-b border-[#30363d] flex justify-between items-center shrink-0">
+      <span class="font-semibold text-xs text-[#7d8590]">src/controller/auth_handler.py</span>
+    </div>
+    <div class="flex-1 overflow-auto p-4 gh-code text-[12px] leading-relaxed no-scrollbar" id="githubContent"></div>
+    <div class="p-3 border-t border-[#30363d] flex gap-2 items-center bg-[#0d1117]">
+      <span class="text-[#7d8590] ml-2">>>></span>
+      <input type="text" id="githubInput" class="bg-transparent flex-1 outline-none text-[#a5d6ff]" placeholder="Execute debug command...">
+    </div>
+  </div>
+
+  <div id="mobileChatView" class="hidden flex-col h-full bg-[#efeae2] z-50">
     <div class="bg-[#075e54] text-white p-4 flex items-center gap-3 shadow-md shrink-0">
-      <div class="w-10 h-10 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center text-gray-600 font-bold">U</div>
+      <div class="w-10 h-10 bg-[#128c7e] rounded-full flex items-center justify-center font-bold">S</div>
       <div>
-        <div class="font-bold text-base" id="mobileTitle">Workspace</div>
-        <div class="text-[11px] opacity-80">online</div>
+        <div class="font-bold text-sm" id="mobileTitle">Workspace Sync</div>
+        <div class="text-[10px] opacity-80">online</div>
       </div>
     </div>
-    
-    <div id="mobileMessages" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
+    <div id="mobileMessages" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col no-scrollbar">
       </div>
-
-    <div class="p-2 bg-[#f0f0f0] flex gap-2 items-center shrink-0">
-      <input type="text" id="mobileInput" class="flex-1 bg-white rounded-full px-4 py-2 outline-none shadow-sm text-sm" placeholder="Type a message">
-      <button id="mobileSendBtn" class="bg-[#128c7e] text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
-        <svg class="w-5 h-5 rotate-90" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    <div class="p-2 bg-[#f0f0f0] flex gap-2 items-center shrink-0 border-t border-gray-300">
+      <input type="text" id="mobileInput" class="flex-1 bg-white rounded-full px-4 py-2 outline-none text-sm shadow-sm" placeholder="Type message...">
+      <button id="mobileSendBtn" class="bg-[#128c7e] text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
     </div>
   </div>
@@ -102,8 +127,10 @@
   <script>
     const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`);
     let myCode = '';
-    let currentUsername = '';
+    let myUser = '';
+    let currentView = '';
 
+    // Login logic
     const attemptLogin = () => {
       myCode = document.getElementById('secretCode').value.trim();
       ws.send(JSON.stringify({ type: 'auth', code: myCode }));
@@ -116,52 +143,60 @@
       const data = JSON.parse(event.data);
 
       if (data.type === 'auth-success') {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        currentUsername = data.username;
-        document.getElementById('mobileTitle').innerText = "System Sync: " + data.username;
+        document.getElementById('loginOverlay').style.display = 'none';
+        myUser = data.username;
         
         if (myCode === '0907') {
+          currentView = 'excel';
           document.getElementById('excelView').classList.remove('hidden');
+          document.title = "Audit_Reconciliation.xlsx";
           initExcel();
-        } else {
+        } else if (myCode === '0701') {
+          currentView = 'github';
           document.getElementById('githubView').classList.remove('hidden');
+          document.title = "src/auth_handler.py";
         }
-        if (data.messageHistory) data.messageHistory.forEach(msg => renderMessage(msg));
+        
+        if (data.messageHistory) data.messageHistory.forEach(msg => render(msg));
       }
 
-      if (data.type === 'message') renderMessage(data);
+      if (data.type === 'message') render(data);
     };
 
-    function renderMessage(data) {
-      const time = new Date(data.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-      const isMe = data.username === currentUsername;
+    function render(data) {
+      const time = new Date(data.timestamp).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      const isMe = data.username === myUser;
 
-      // 1. Render for Excel
+      // Excel Row
       const row = document.createElement('tr');
-      row.innerHTML = `<td class="bg-gray-100 border text-center text-[10px] text-gray-400">#</td><td class="border px-2 text-[10px] text-gray-400">${time}</td><td class="border px-2 font-bold">${data.username}</td><td class="border px-2 text-gray-700 bg-yellow-50/20">${data.text}</td>`;
+      row.innerHTML = `
+        <td class="header-col">#</td>
+        <td class="border px-2 text-[9px] text-gray-300">${time}</td>
+        <td class="border px-2 font-bold text-gray-300">${data.username}</td>
+        <td class="border px-2 stealth-text">${data.text}</td>
+      `;
       document.getElementById('excelRows').appendChild(row);
 
-      // 2. Render for GitHub
+      // GitHub Line
       const line = document.createElement('div');
-      line.innerHTML = `<span class="text-[#7d8590]"># [${time}]</span> <span class="text-[#ff7b72]">${data.username}</span>: <span class="text-[#a5d6ff]">"${data.text}"</span>`;
+      line.className = "stealth-text";
+      line.innerHTML = `<span class="text-[#30363d]"># [${time}]</span> <span class="text-[#30363d]">${data.username}</span>.debug_info("<span class="text-[#30363d]">${data.text}</span>")`;
       document.getElementById('githubContent').appendChild(line);
 
-      // 3. Render for Mobile (WhatsApp Bubbles)
+      // Mobile Bubble
       const bubble = document.createElement('div');
-      bubble.className = `max-w-[80%] p-2 rounded-lg text-sm shadow-sm relative ${isMe ? 'bg-[#dcf8c6] self-end' : 'bg-white self-start'}`;
-      bubble.innerHTML = `
-        <div class="text-[10px] font-bold text-gray-500 mb-1">${data.username}</div>
-        <div>${data.text}</div>
-        <div class="text-[9px] text-gray-400 text-right mt-1">${time}</div>
-      `;
+      bubble.className = `max-w-[85%] p-2 rounded-lg text-sm shadow-sm ${isMe ? 'bg-[#dcf8c6] self-end' : 'bg-white self-start'}`;
+      bubble.innerHTML = `<div class="text-[9px] font-bold text-gray-500 mb-1">${data.username}</div><div>${data.text}</div><div class="text-[8px] text-gray-400 text-right mt-1">${time}</div>`;
       document.getElementById('mobileMessages').appendChild(bubble);
       
-      // Auto scroll
-      const mobileContainer = document.getElementById('mobileMessages');
-      mobileContainer.scrollTop = mobileContainer.scrollHeight;
+      // Auto Scroll
+      const m = document.getElementById('mobileMessages');
+      const d = currentView === 'excel' ? document.getElementById('excelView').querySelector('.flex-1') : document.getElementById('githubContent');
+      if(m) m.scrollTop = m.scrollHeight;
+      if(d) d.scrollTop = d.scrollHeight;
     }
 
-    // Input Handlers
+    // Messaging Logic
     const send = (val) => { if(val) ws.send(JSON.stringify({ type: 'message', text: val })); };
 
     document.getElementById('excelFormula').addEventListener('keypress', (e) => { if(e.key === 'Enter') { send(e.target.value); e.target.value = ''; }});
@@ -173,15 +208,38 @@
     });
 
     function initExcel() {
-      const body = document.getElementById('excelRows');
-      for(let i=1; i<=15; i++) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="bg-gray-50 border text-center text-[10px]"></td><td class="border"></td><td class="border"></td><td class="border"></td>`;
-        body.appendChild(tr);
+      const b = document.getElementById('excelRows');
+      if(b.children.length === 0) {
+        // Data Dummy: Catatan Rumus Dasar Excel
+        const fakeData = [
+          ["SUM", "=SUM(A1:A10)", "Menjumlahkan nilai dalam rentang sel."],
+          ["AVERAGE", "=AVERAGE(B1:B10)", "Menghitung rata-rata nilai."],
+          ["IF", "=IF(C1>50, 'Pass', 'Fail')", "Logika pengkondisian standar."],
+          ["VLOOKUP", "=VLOOKUP(lookup_val, table, col, [range])", "Mencari data secara vertikal."],
+          ["CONCAT", "=CONCATENATE(text1, text2)", "Menggabungkan dua atau lebih teks."],
+          ["COUNT", "=COUNT(A1:A20)", "Menghitung jumlah sel yang berisi angka."],
+          ["MIN/MAX", "=MIN(B1:B5) / =MAX(B1:B5)", "Mencari nilai terkecil atau terbesar."],
+          ["TRIM", "=TRIM(text)", "Menghapus spasi berlebih pada teks."],
+          ["TODAY", "=TODAY()", "Menampilkan tanggal hari ini."],
+          ["LEN", "=LEN(text)", "Menghitung jumlah karakter dalam sel."]
+        ];
+
+        // Masukkan data dummy ke 10 baris pertama
+        fakeData.forEach((data, i) => {
+          const r = document.createElement('tr');
+          r.innerHTML = `
+            <td class="header-col border text-gray-400">${i + 1}</td>
+            <td class="border px-2 text-[10px] text-blue-800 font-mono">${data[0]}</td>
+            <td class="border px-2 text-[10px] text-gray-500 font-mono">${data[1]}</td>
+            <td class="border px-2 text-[10px] text-gray-400 italic">${data[2]}</td>
+          `;
+          b.appendChild(r);
+        });
       }
     }
 
-    window.addEventListener('keydown', (e) => { if(e.key === 'Escape') location.reload(); });
+    // PANIC KEY: ESC to Reset
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') location.reload(); });
   </script>
 </body>
 </html>
