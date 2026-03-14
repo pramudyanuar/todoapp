@@ -89,5 +89,12 @@
     "userId": 2,
     "text": "hai bang",
     "timestamp": "2026-03-14T16:18:28.359Z"
+  },
+  {
+    "type": "message",
+    "username": "bot 1",
+    "userId": 1,
+    "text": "hi kak",
+    "timestamp": "2026-03-14T16:24:21.803Z"
   }
 ]
